@@ -41,7 +41,10 @@ void Cpu::process_insn(uint16_t op)
         // 2NNN
         // only one opcode starting with 2, which is calling subroutine at nnn
         uint16_t subroutine_addr = op & 0xFFF;
-        PC = memory[subroutine_addr];
+        
+        ++SP;
+        memory[SP] = PC;
+        PC = subroutine_addr;
 
     } else if (insn == 3) {
         // 3XNN
