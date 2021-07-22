@@ -243,9 +243,9 @@ void Cpu::step()
 
     uint16_t insn = fetch_insn();
 
-    process_insn(insn);
-
     PC += 2;
+    
+    process_insn(insn);
 
 }
 
