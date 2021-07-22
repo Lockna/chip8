@@ -144,9 +144,9 @@ void Cpu::process_insn(uint16_t op)
             V[x_reg] = V[x_reg] + V[y_reg];
 
             if (V[x_reg] + V[y_reg] > 255) {
-                VF = 1;
+                V[0xF] = 1;
             } else {
-                VF = 0;
+                V[0xF] = 0;
             }
 
         } else if (insn_kind == 5) {
@@ -159,16 +159,16 @@ void Cpu::process_insn(uint16_t op)
             V[x_reg] -= V[y_reg];
 
             if (V[x_reg] - V[y_reg] < 0) {
-                VF = 0;
+                V[0xF] = 0;
             } else {
-                VF = 1;
+                V[0xF] = 1;
             }
 
         } else if (insn_kind == 6) {
             // 8XY6
             // Stores the least significant bit of VX in VF and then shifts VX to the right by 1
             uint8_t x_reg = (op >> 8) & 0xF;
-            VF = V[x_reg] & 0x1;
+            V[0xF] = V[x_reg] & 0x1;
             V[x_reg] >>= 1;
 
         } else if (insn_kind == 7) {
@@ -181,16 +181,16 @@ void Cpu::process_insn(uint16_t op)
             V[x_reg] = V[y_reg] - V[x_reg];
 
             if (V[y_reg] - V[x_reg] < 0) {
-                VF = 0;
+                V[0xF] = 0;
             } else {
-                VF = 1;
+                V[0xF] = 1;
             }
         } else if (insn_kind == 0xE) {
             // 8XYE
             // Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
 
             uint8_t x_reg = (op >> 8) & 0xF;
-            VF = (V[x_reg] >> 7) & 0x1;
+            V[0xF] = (V[x_reg] >> 7) & 0x1;
             V[x_reg] <<= 1;
         }
 
