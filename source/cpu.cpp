@@ -35,8 +35,6 @@ void Cpu::process_insn(uint16_t op)
     } else if (insn == 1) {
         // 1NNN
         // only one opcode starting with 1, which is jump, jumps to nnn
-        SP += 1;
-        memory[SP] = PC;
         PC = op & 0xFFF;
 
     } else if (insn == 2) {
