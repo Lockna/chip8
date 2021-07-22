@@ -21,7 +21,6 @@ private:
     uint16_t I;
     uint16_t PC;
     uint8_t SP;
-    uint8_t VF;
     
     uint8_t* screen_buffer;
 
