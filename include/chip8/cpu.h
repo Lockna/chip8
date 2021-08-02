@@ -18,6 +18,7 @@ public:
 private:
     uint8_t V[16];
     uint8_t memory[4096];
+    uint16_t stack[16];
     uint16_t I;
     uint16_t PC;
     uint8_t SP;

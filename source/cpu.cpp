@@ -5,12 +5,11 @@ Cpu::Cpu()
 {
     screen_buffer = &memory[0xF00];
     PC = 0x200;
-    SP = 0xFA0;
 }
 
 int Cpu::upload_file_to_ram(std::string path) 
 {
-
+    return 0;
 }
 
 uint16_t Cpu::fetch_insn()
@@ -28,7 +27,7 @@ void Cpu::process_insn(uint16_t op)
             case 0x00E0: // cls - clear the display
                 break;    
             case 0x00EE: // return from subroutine
-                PC = memory[SP];
+                PC = stack[SP];
                 SP -= 1;
                 break;
         }
@@ -43,7 +42,7 @@ void Cpu::process_insn(uint16_t op)
         uint16_t subroutine_addr = op & 0xFFF;
         
         ++SP;
-        memory[SP] = PC;
+        stack[SP] = PC;
         PC = subroutine_addr;
 
     } else if (insn == 3) {
