@@ -1,6 +1,7 @@
 #include <cpu.h>
 #include <ctime>
 #include <filesystem>
+#include <unistd.h>
 
 int realKeyboard[] = {
     KEY_ZERO,   KEY_ONE,    KEY_TWO,    KEY_THREE,
@@ -16,11 +17,17 @@ int emulatorKeyboard[] = {
     0x0A,   0x00,   0x0B,   0x0F
 };
 
+bool updateVideo = false;
+
 Cpu::Cpu()
 {
 
     for (int i = 0; i < 0x1000; i++) {
         memory[i] = 0;
+    }
+
+    for (int i = 0; i < 2048; i++) {
+        frameBuffer[i] = 0;
     }
 
     unsigned char chip8_fontset[80] = {
@@ -86,7 +93,7 @@ void Cpu::process_insn(uint16_t op)
         uint16_t subroutine_addr = op & 0xFFF;
         
         ++SP;
-        stack[SP] = PC+2;
+        stack[SP] = PC;
         PC = subroutine_addr;
 
     } else if (insn == 3) {
@@ -250,6 +257,7 @@ void Cpu::process_insn(uint16_t op)
         // ANNN
         // Sets I to the address NNN. 
         I = op & 0xFFF;
+
     }  else if (insn == 0xB) {
         // BNNN
         // Jumps to the address NNN plus V0. 
@@ -275,6 +283,8 @@ void Cpu::process_insn(uint16_t op)
         uint8_t y_reg = (op >> 4) & 0xF;
         uint8_t n = op & 0xF;
 
+        V[0xF] = 0;
+
         for (int i = 0; i < n; i++) {
 
             uint8_t pixelLine = memory[I + i];
@@ -282,11 +292,16 @@ void Cpu::process_insn(uint16_t op)
             for (int j = 0; j < 8; j++) {
 
                 if (pixelLine & (0x80 >> j)) {
-                    // TODO: multiply somehow with 10, so the result is visible, with original graphics (64x32) it's barely visible
-                    // TODO: Change V[0xF] if pixel swaps it's value
+
+                    if (frameBuffer[(V[x_reg] + j + ((V[y_reg] + i) * 64))] == 1) {
+                        V[0xF] = 1;
+                    } 
+                    frameBuffer[V[x_reg] + j + ((V[y_reg] + i) * 64)] ^= 1;
                 }
             }
         }
+
+        updateVideo = true;
 
     } else if (insn == 0xE) {
 
@@ -373,7 +388,7 @@ void Cpu::process_insn(uint16_t op)
             // FX29
             // Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font. 
 
-            I = 0x50 + (op & 0xFF) * 5;
+            I = 0x50 + ((op >> 8) & 0xF) * 5;
 
         } else if (insn_kind == 0x33) {
             // FX33
@@ -386,7 +401,7 @@ void Cpu::process_insn(uint16_t op)
 
             uint8_t x_reg = (op >> 8) & 0xF;
 
-            memory[I] = V[x_reg] / 100;
+            memory[I] = (uint8_t)(V[x_reg] / 100);
             memory[I+1] = (V[x_reg] / 10) % 10;
             memory[I+2] = (V[x_reg]) % 10;
 
@@ -397,7 +412,7 @@ void Cpu::process_insn(uint16_t op)
 
             uint8_t x_reg = (op >> 8) & 0xF;
 
-            uint8_t mem_addr = I;
+            uint16_t mem_addr = I;
 
             for (int i = 0; i <= x_reg; i++) {
                 memory[mem_addr] = V[i];
@@ -411,7 +426,7 @@ void Cpu::process_insn(uint16_t op)
 
             uint8_t x_reg = (op >> 8) & 0xF;
 
-            uint8_t mem_addr = I;
+            uint16_t mem_addr = I;
 
             for (int i = 0; i <= x_reg; i++) {
                 V[i] = memory[mem_addr];
@@ -419,7 +434,6 @@ void Cpu::process_insn(uint16_t op)
             }
         }
     }
-
 }
 
 void Cpu::step() 
@@ -444,8 +458,6 @@ void Cpu::run()
 {
 
     InitWindow(640, 320, "raylib");
-
-    SetTargetFPS(60);
     
     ClearBackground(BLACK);
 
@@ -456,9 +468,21 @@ void Cpu::run()
         BeginDrawing();
 
         step();
+        usleep(2000);
 
-        // DrawFPS(10, 10);
+        if (updateVideo) {
+            updateVideo = false;
 
+            for (int y = 0; y < 32; y++) {
+                for (int x = 0; x < 64; x++) {
+                    if (frameBuffer[(y * 64) + x] != 0) {
+                        DrawRectangle (x * 10, y * 10, 10, 10, WHITE);
+                    } else {
+                        DrawRectangle (x * 10, y * 10, 10, 10, BLACK);
+                    }
+                }
+            }
+        }
         EndDrawing();
         //----------------------------------------------------------------------------------
     }

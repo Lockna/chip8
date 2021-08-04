@@ -23,6 +23,7 @@ private:
 
     uint8_t delayTimer;
     uint8_t soundTimer;
+    uint8_t frameBuffer[2048];
 
     uint16_t stack[16];
     uint16_t I;
