@@ -461,6 +461,8 @@ void Cpu::run()
     
     ClearBackground(BLACK);
 
+    SetTargetFPS(500);
+
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Draw
@@ -468,7 +470,6 @@ void Cpu::run()
         BeginDrawing();
 
         step();
-        usleep(2000);
 
         if (updateVideo) {
             updateVideo = false;
